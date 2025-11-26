@@ -8,26 +8,38 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - name: Install jupyter
+
+      - name: Install Jupyter
         run: pip install jupyter nbconvert
-      - name: Convert notebook
+
+      - name: Convert notebook to HTML
         run: |
           mkdir -p docs
           jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic
-          cp docs/demo.html docs/index.html || true
-          echo "<h1>Counterparty Credit Risk & Backtesting MVP</h1><p><strong>Live demo • Pure Python • Zero cost • ECB/BIS aligned</strong></p>" > docs/header.html
-          cat docs/header.html docs/index.html > docs/temp.html && mv docs/temp.html docs/index.html
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+          mv docs/demo.html docs/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
