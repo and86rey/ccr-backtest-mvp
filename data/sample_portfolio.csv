@@ -1,0 +1,5 @@
+netting_set_id,counterparty,product,notional,maturity_date,strike_or_rate,currency_pair,rating,sector
+NS001,Deutsche Bank,FX Forward,1000000,2026-05-20,1.1300,EURUSD,A,Banks
+NS001,Deutsche Bank,IRS,5000000,2028-01-15,0.0240,USD,A,Banks
+NS002,HedgeFund Alpha,FX Forward,2000000,2026-03-15,1.1050,EURUSD,BBB,Hedge Funds
+NS003,PE Fund Gamma,Equity Swap,3000000,2027-06-30,100.0,SPX,B,Private Equity
