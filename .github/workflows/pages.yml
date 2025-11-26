@@ -1,0 +1,28 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install jupyter
+        run: pip install jupyter nbconvert
+      - name: Convert notebook
+        run: |
+          jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic
+          cp docs/demo.html docs/index.html
+          echo "<h1>Counterparty Credit Risk & Backtesting MVP</h1>" > docs/header.html
+          echo "<p><strong>Live demo • Pure Python • Zero cost • ECB/BIS aligned</strong></p>" >> docs/header.html
+          cat docs/header.html docs/index.html > docs/temp.html && mv docs/temp.html docs/index.html
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
