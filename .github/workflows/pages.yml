@@ -3,6 +3,11 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,10 +21,10 @@ jobs:
         run: pip install jupyter nbconvert
       - name: Convert notebook
         run: |
+          mkdir -p docs
           jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic
-          cp docs/demo.html docs/index.html
-          echo "<h1>Counterparty Credit Risk & Backtesting MVP</h1>" > docs/header.html
-          echo "<p><strong>Live demo • Pure Python • Zero cost • ECB/BIS aligned</strong></p>" >> docs/header.html
+          cp docs/demo.html docs/index.html || true
+          echo "<h1>Counterparty Credit Risk & Backtesting MVP</h1><p><strong>Live demo • Pure Python • Zero cost • ECB/BIS aligned</strong></p>" > docs/header.html
           cat docs/header.html docs/index.html > docs/temp.html && mv docs/temp.html docs/index.html
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
