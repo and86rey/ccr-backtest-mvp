@@ -28,15 +28,16 @@ jobs:
 
       - name: Install Jupyter
         run: pip install jupyter nbconvert
-        
+      
       - name: Convert notebook to HTML
         run: |
           mkdir -p docs
           jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic
           mv docs/demo.html docs/index.html
-          # Inject custom CSS and wrapper for VaR-like theme
           sed -i '1i<link rel="stylesheet" href="assets/style.css">' docs/index.html
           sed -i 's|<body>|<body><div class="container">|' docs/index.html
+          echo '<hr style="border: 1px solid #f5a623; margin: 50px 0;">' >> docs/index.html
+          echo '<footer><p>Built by Andrey Reyn • <a href="https://www.linkedin.com/in/and86rey/" target="_blank">LinkedIn</a> • Open-source under MIT</p></footer>' >> docs/index.html
           echo '</div></body>' >> docs/index.html
 
       - name: Upload artifact
