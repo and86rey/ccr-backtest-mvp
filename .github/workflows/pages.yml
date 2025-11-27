@@ -28,16 +28,28 @@ jobs:
 
       - name: Install Jupyter
         run: pip install jupyter nbconvert
-      
-      - name: Convert notebook to HTML
+
+      - name: Convert notebook + Inject Black & Orange Theme
         run: |
           mkdir -p docs
           jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic
           mv docs/demo.html docs/index.html
+
+          # Inject custom CSS
           sed -i '1i<link rel="stylesheet" href="assets/style.css">' docs/index.html
+
+          # Wrap content in container
           sed -i 's|<body>|<body><div class="container">|' docs/index.html
-          echo '<hr style="border: 1px solid #f5a623; margin: 50px 0;">' >> docs/index.html
-          echo '<footer><p>Built by Andrey Reyn • <a href="https://www.linkedin.com/in/and86rey/" target="_blank">LinkedIn</a> • Open-source under MIT</p></footer>' >> docs/index.html
+
+          # Add orange separator + footer (exact match with VaR site)
+          echo '<hr style="border: 1px solid #f5a623; margin: 60px 0;">' >> docs/index.html
+          echo '<footer>' >> docs/index.html
+          echo '  <p style="text-align:center; color:#aaa; font-size:0.95em;">' >> docs/index.html
+          echo '    Built by Andrey Reyn • <a href="https://www.linkedin.com/in/and86rey/" target="_blank" style="color:#f5a623; text-decoration:none; font-weight:bold;">LinkedIn</a> • Open-source under MIT' >> docs/index.html
+          echo '  </p>' >> docs/index.html
+          echo '</footer>' >> docs/index.html
+
+          # Close container
           echo '</div></body>' >> docs/index.html
 
       - name: Upload artifact
