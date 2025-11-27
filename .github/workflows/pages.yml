@@ -45,7 +45,7 @@ jobs:
           echo '<hr style="border: 1px solid #f5a623; margin: 60px 0;">' >> docs/index.html
           echo '<footer>' >> docs/index.html
           echo '  <p style="text-align:center; color:#aaa; font-size:0.95em;">' >> docs/index.html
-          echo '    Built by Andrey Reyn • <a href="https://www.linkedin.com/in/and86rey/" target="_blank" style="color:#f5a623; text-decoration:none; font-weight:bold;">LinkedIn</a> • Open-source under MIT' >> docs/index.html
+          echo '    Built by Andrey Zakharov • <a href="https://www.linkedin.com/in/zakharovaa/" target="_blank" style="color:#f5a623; text-decoration:none; font-weight:bold;">LinkedIn</a> • Open-source under MIT' >> docs/index.html
           echo '  </p>' >> docs/index.html
           echo '</footer>' >> docs/index.html
 
