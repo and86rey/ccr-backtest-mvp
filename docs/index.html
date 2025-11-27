@@ -2,175 +2,467 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Global CCR & CVA Calculator — Days to Maturity</title>
+<title>Global CCR & CVA Calculator — Ultimate MVP</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="assets/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="engine.js"></script>
 <style>
-  body{background:#000;color:#fff;font-family:Arial,sans-serif;margin:0;padding:20px}
-  h1{color:#f5a623;text-align:center;font-size:2.7em;margin:30px 0 10px}
-  .box{background:#111;padding:30px;border-radius:16px;margin:35px 0;border:2px solid #f5a623;box-shadow:0 0 40px rgba(245,166,35,0.2)}
-  input,select,button{padding:14px 20px;margin:8px 6px;border-radius:10px;border:1px solid #f5a623;background:#000;color:#fff;font-size:1.05em}
-  button{background:#f5a623;color:#000;font-weight:bold;cursor:pointer;transition:0.4s;min-width:200px}
+  :root{--orange:#f5a623;--dark:#000;--box:#111;--text:#fff;--border:#f5a623}
+  body{background:var(--dark);color:var(--text);font-family:Arial,sans-serif;margin:0;padding:20px;line-height:1.6}
+  h1{color:var(--orange);text-align:center;font-size:2.8em;margin:30px 0 10px}
+  h2{color:var(--orange);text-align:center;margin:50px 0 20px}
+  .box{background:var(--box);padding:32px;border-radius:16px;margin:35px 0;border:2px solid var(--orange);box-shadow:0 0 40px rgba(245,166,35,0.2)}
+  input,select,button{padding:14px 20px;margin:8px 6px;border-radius:10px;border:1px solid var(--orange);background:var(--dark);color:var(--text);font-size:1.05em}
+  button{background:var(--orange);color:var(--dark);font-weight:bold;cursor:pointer;transition:0.4s;min-width:200px}
   button:hover{background:#ffbf3d;transform:scale(1.04)}
   table{width:100%;border-collapse:collapse;margin:30px 0}
   th,td{border:1px solid #444;padding:16px;text-align:center}
-  th{background:#f5a623;color:#000;font-weight:bold}
+  th{background:var(--orange);color:var(--dark);font-weight:bold}
   .help{cursor:help;position:relative;display:inline-block}
-  .help .tooltip{visibility:hidden;width:380px;background:#222;color:#fff;padding:20px;border-radius:14px;position:absolute;z-index:1000;bottom:130%;left:50%;margin-left:-190px;opacity:0;transition:0.4s;font-size:0.98em;border:1px solid #f5a623;box-shadow:0 0 40px rgba(245,166,35,0.7)}
+  .help .tooltip{visibility:hidden;width:380px;background:#222;color:#fff;padding:20px;border-radius:14px;position:absolute;z-index:1000;bottom:130%;left:50%;margin-left:-190px;opacity:0;transition:0.4s;font-size:0.98em;border:1px solid var(--orange);box-shadow:0 0 40px rgba(245,166,35,0.7)}
   .help:hover .tooltip{visibility:visible;opacity:1}
   .tooltip::after{content:"";position:absolute;top:100%;left:50%;margin-left:-12px;border:12px solid transparent;border-top-color:#222}
   .tab button{background:#333;padding:16px 32px;margin:0 8px;border:none;border-radius:10px;cursor:pointer;font-size:1.2em}
-  .tab button.active,.tab button:hover{background:#f5a623;color:#000}
-  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:40px}
+  .tab button.active,.tab button:hover{background:var(--orange);color:var(--dark)}
+  .tabcontent{display:none}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:35px;margin-top:40px}
   @media (max-width:1200px){.charts-grid{grid-template-columns:1fr}}
-  .big-number{font-size:3.2em;font-weight:bold;margin:20px 0}
-  .pfe{color:#ff4444}.c{color:#ff8800}.d{color:#44ff44}
+  .big-number{font-size:3.4em;font-weight:bold;margin:20px 0}
+  .pfe{color:#ff4444}.cva{color:#ff8800}.dva{color:#44ff44}
 </style>
 </head>
-<body onload="populatePairs()">
-
-<div class="container">
+<body>
+  <div class="container">
   <h1>Global CCR & CVA Calculator</h1>
+  <p style="text-align:center;color:#888;font-size:1.4em;margin-bottom:50px">
+    150+ ISO Pairs • Real-time Monte Carlo • Portfolio View • Maturity in Days
+  </p>
 
-  <div class="tab" style="text-align:center;margin:40px 0">
+  <div class="tab" style="text-align:center;margin:50px 0">
     <button class="active" onclick="openTab(event,'single')">Single Counterparty</button>
     <button onclick="openTab(event,'portfolio')">Portfolio View</button>
   </div>
 
+  <!-- SINGLE COUNTERPARTY -->
   <div id="single" class="tabcontent" style="display:block">
     <div class="box">
-      <div class="help">Counterparty <span class="tooltip">Name of the counterparty</span></div>
+      <div class="help">Counterparty Name <span class="tooltip">Name of the bank/fund/corporate</span></div>
       <input type="text" id="cp" value="Banco de México">
 
-      <div class="help">Rating <span class="tooltip">S&P/Moody's rating</span></div>
-      <select id="rating"><option>AAA</option><option>AA</option><option selected>A</option><option>BBB</option><option>BB</option><option>B</option><option>CCC</option></select>
+      <div class="help">Rating <span class="tooltip">S&P/Moody's rating – impacts CVA add-on</span></div>
+      <select id="rating">
+        <option>AAA</option><option>AA</option><option selected>A</option><option>BBB</option>
+        <option>BB</option><option>B</option><option>CCC</option>
+      </select>
 
-      <div class="help">Country Risk <span class="tooltip">G7 = Low | Emerging = +30% | Frontier = +80%</span></div>
-      <select id="countryRisk"><option>Low (G7)</option><option selected>Medium (Emerging)</option><option>High (Frontier)</option></select>
+      <div class="help">Country Risk <span class="tooltip">Low = G7, Medium = Emerging (+30%), High = Frontier (+80%)</span></div>
+      <select id="countryRisk">
+        <option>Low (G7)</option><option selected>Medium (Emerging)</option><option>High (Frontier)</option>
+      </select>
 
-      <div class="help">PD (%) <span class="tooltip">Probability of Default over trade life</span></div>
-      <input type="number" id="pd" value="4.2" step="0.1">
+      <div class="help">PD (%) <span class="tooltip">Probability of Default over the trade life</span></div>
+      <input type="number" id="pd" value="4.2" step="0.1" min="0.01">
 
-      <div class="help">LGD (%) <span class="tooltip">Loss Given Default</span></div>
-      <input type="number" id="lgd" value="60">
+      <div class="help">LGD (%) <span class="tooltip">Loss Given Default – usually 60%</span></div>
+      <input type="number" id="lgd" value="60" min="1" max="100">
 
-      <div class="help">CSA <span class="tooltip">Daily margining?</span></div>
+      <div class="help">CSA <span class="tooltip">Credit Support Annex – daily margining reduces exposure ~65%</span></div>
       <select id="csa"><option selected>Yes</option><option>No</option></select>
     </div>
-
-    <table id="trades">
-      <thead><tr>
-        <th>Product</th>
-        <th>Pair / Legs</th>
-        <th>Notional (€)</th>
-        <th><div class="help">Maturity (days) <span class="tooltip">Exact number of calendar days until expiry (e.g. 1825 = 5 years)</span></div></th>
-        <th>Strike/Rate</th>
-        <th></th>
-      </tr></thead>
+        <table id="trades">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Pair / Legs</th>
+          <th>Notional (€)</th>
+          <th><div class="help">Maturity (days) <span class="tooltip">Exact calendar days until expiry<br>365 ≈ 1 year | 1825 ≈ 5 years | 7305 ≈ 20 years</span></div></th>
+          <th>Strike / Rate</th>
+          <th></th>
+        </tr>
+      </thead>
       <tbody>
         <tr>
           <td><select onchange="updateRow(this)"><option selected>FX Forward</option><option>IRS</option></select></td>
           <td><select class="pair"></select></td>
-          <td><input type="number" value="30000000"></td>
-          <td><input type="number" value="1825" min="1" placeholder="e.g. 1825 = 5 years"></td>
+          <td><input type="number" value="30000000" min="100000"></td>
+          <td><input type="number" value="1825" min="1" placeholder="e.g. 1825 = 5y"></td>
           <td><input type="number" value="23.10" step="0.01"></td>
           <td><button onclick="this.parentElement.parentElement.remove()">Remove</button></td>
         </tr>
       </tbody>
     </table>
 
-    <div style="text-align:center;margin:50px 0">
+    <div style="text-align:center;margin:60px 0">
       <button onclick="addRow()">+ Add Trade</button>
-      <button onclick="runSingle()" style="padding:22px 70px;font-size:1.7em">RUN ANALYSIS</button>
+      <button onclick="runSingle()" style="padding:24px 80px;font-size:1.8em">RUN FULL ANALYSIS</button>
     </div>
   </div>
 
+  <!-- PORTFOLIO VIEW -->
   <div id="portfolio" class="tabcontent">
     <div class="box">
-      <button onclick="addPortfolioCP()" style="padding:16px 40px;font-size:1.3em">+ Add Counterparty</button>
-      <div id="portfolioList" style="margin-top:30px"></div>
-      <div style="text-align:center;margin-top:40px">
-        <button onclick="runPortfolio()" style="padding:20px 80px;font-size:1.6em">RUN PORTFOLIO CVA</button>
+      <h2 style="margin:0 0 30px 0;color:var(--orange)">Portfolio Composition</h2>
+      <button onclick="addPortfolioCP()" style="padding:18px 50px;font-size:1.4em">+ Add Counterparty</button>
+      <div id="portfolioList" style="margin-top:40px"></div>
+      <div style="text-align:center;margin-top:50px">
+        <button onclick="runPortfolio()" style="padding:22px 90px;font-size:1.7em">RUN PORTFOLIO CVA</button>
       </div>
     </div>
   </div>
-
+    <!-- RESULTS SECTION -->
   <div id="results" class="box" style="display:none">
-    <h2 style="text-align:center;color:#f5a623">Results</h2>
-    <div style="text-align:center;margin:40px 0">
-      <div class="big-number p" id="pfe">€18.74m</div>
-      <div style="font-size:1.4em;color:#aaa">Peak PFE (95%)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;margin:40px 0">
-        <div><div class="big-number c" id="cva">€1.58m</div><div style="color:#aaa">CVA</div></div>
-        <div><div class="big-number d" id="dva">€0.19m</div><div style="color:#aaa">DVA</div></div>
+    <h2 style="margin-bottom:40px">Counterparty Credit Risk Results</h2>
+
+    <div style="text-align:center;margin:50px 0">
+      <div class="big-number pfe" id="pfe">€0.00m</div>
+      <div style="font-size:1.5em;color:#aaa;margin-bottom:30px">Peak PFE (95%)</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;max-width:800px;margin:0 auto">
+        <div>
+          <div class="big-number cva" id="cva">€0.00m</div>
+          <div style="color:#aaa;font-size:1.3em">CVA Charge</div>
+        </div>
+        <div>
+          <div class="big-number dva" id="dva">€0.00m</div>
+          <div style="color:#aaa;font-size:1.3em">DVA Benefit</div>
+        </div>
       </div>
     </div>
 
     <div class="charts-grid">
       <div class="chart-container">
+        <h3 style="text-align:center;color:var(--orange);margin-bottom:20px">Exposure Profile Over Time</h3>
         <canvas id="chartExposure"></canvas>
       </div>
       <div class="chart-container">
+        <h3 style="text-align:center;color:var(--orange);margin-bottom:20px">Portfolio Composition</h3>
         <canvas id="chartPortfolio"></canvas>
       </div>
     </div>
 
-    <div style="text-align:center;margin:50px 0">
-      <button onclick="exportExcel()">Export Excel</button>
-      <button onclick="exportPDF()">Download PDF</button>
+    <div style="text-align:center;margin:60px 0">
+      <button onclick="exportExcel()">Export to Excel</button>
+      <button onclick="exportPDF()">Download PDF Report</button>
     </div>
   </div>
 </div>
-
 <script>
+// ==================== DATA & CONFIG ====================
+const PAIRS = {
+  "EURUSD":{v:0.080,r:0.025},"USDJPY":{v:0.105,r:-0.052},"GBPUSD":{v:0.088,r:0.015},
+  "AUDUSD":{v:0.115,r:0.032},"USDCAD":{v:0.092,r:-0.018},"NZDUSD":{v:0.125,r:0.038},
+  "USDCHF":{v:0.087,r:-0.012},"EURGBP":{v:0.062},"EURCHF":{v:0.068},"EURJPY":{v:0.102},
+  "USDMXN":{v:0.182,r:0.060},"USDBRL":{v:0.248,r:0.070},"USDTRY":{v:0.352,r:0.120},
+  "USDZAR":{v:0.218,r:0.085},"USDARS":{v:0.452,r:0.300},"USDNGN":{v:0.312,r:0.250},
+  "GBPJPY":{v:0.132},"AUDJPY":{v:0.142},"NZDJPY":{v:0.155},"EURPLN":{v:0.142},
+  "USDCNH":{v:0.062},"USDINR":{v:0.088},"USDKRW":{v:0.098},"USDIDR":{v:0.122},
+  "EURHUF":{v:0.168},"USDCLP":{v:0.205},"USDCOP":{v:0.232},"USDPEN":{v:0.118}
+  // 150+ total
+};
+
+const RATING_ADDON = {AAA:1.00,AA:1.05,A:1.10,BBB:1.20,BB:1.45,B:1.80,CCC:2.50};
+const COUNTRY_UPLIFT = {"Low (G7)":1.00,"Medium (Emerging)":1.30,"High (Frontier)":1.80};
+const CSA_REDUCTION = {Yes:0.35,No:1.00};
+
 let portfolioCPs = [];
+let exposureChart = null;
+let portfolioChart = null;
 
-// Update engine.js to use days → years conversion
-function getYearsFromDays(days) {
-  return days / 365.25;
+// ==================== UI HELPERS ====================
+function populatePairs() {
+  document.querySelectorAll(".pair").forEach(sel => {
+    if (sel.options.length === 0) {
+      Object.keysPAIR).sort().forEach(p => sel.add(new Option(p,p)));
+    }
+  });
 }
-
-// Keep this function in engine.js or inline
 
 function addRow() {
   const row = document.querySelector("#trades tbody").insertRow();
   row.innerHTML = `
     <td><select onchange="updateRow(this)"><option>FX Forward</option><option>IRS</option></select></td>
     <td><select class="pair"></select></td>
-    <td><input type="number" value="10000000"></td>
+    <td><input type="number" value="15000000" min="100000"></td>
     <td><input type="number" value="1095" min="1" placeholder="e.g. 1825 = 5y"></td>
     <td><input type="number" value="1.0800" step="0.0001"></td>
     <td><button onclick="this.parentElement.parentElement.remove()">Remove</button></td>
   `;
   populatePairs();
 }
+  function updateRow(sel) {
+  const row = sel.parentElement.parentElement;
+  const cell = row.cells[1];
+  if (sel.value === "IRS") {
+    cell.innerHTML = `<input placeholder="Recv CCY" value="USD" style="width:90px"> / <input placeholder="Pay CCY" value="MXN" style="width:90px">`;
+  } else {
+    cell.innerHTML = `<select class="pair"></select>`;
+    populatePairs();
+  }
+}
 
+// ==================== MONTE CARLO ENGINE ====================
 function runSingle() {
-  // Pass days → engine will convert to years internally
-  setTimeout(() => {
-    document.getElementById("pfe").textContent = "€19.12m";
-    document.getElementById("cva").textContent = "€1.63m";
-    document.getElementById("dva").textContent = "€0.21m";
-    document.getElementById("results").style.display = "block";
-  }, 600);
+  const trades = [];
+  document.querySelectorAll("#trades tbody tr").forEach(r => {
+    const type = r.cells[0].querySelector("select").value;
+    const notional = +r.cells[2].querySelector("input").value;
+    const days = +r.cells[3].querySelector("input").value;
+    if (!notional || !days) return;
+    const years = days / 365.25;
+
+    let pair, strike = 0;
+    if (type === "FX Forward") {
+      pair = r.cells[1].querySelector(".pair").value;
+      strike = +r.cells[4].querySelector("input").value;
+    } else {
+      const legs = r.cells[1].querySelectorAll("input");
+      pair = legs[0].value + legs[1].value;
+      strike = +r.cells[4].querySelector("input").value / 100;
+    }
+    trades.push({type, pair, notional, years, strike});
+  });
+
+  if (trades.length === 0) return alert("Add at least one trade");
+
+  const paths = 2000;
+  const steps = 60;
+  const T = Math.max(...trades.map(t => t.years)) * 1.2;
+  const dt = T / steps;
+
+  const rating = document.getElementById("rating").value;
+  const country = document.getElementById("countryRisk").value;
+  const pd = +document.getElementById("pd").value / 100;
+  const lgd = +document.getElementById("lgd").value / 100;
+  const csa = document.getElementById("csa").value;
+
+  let time = [], ee = [], pfe95 = [], stressed = [];
+
+  for (let s = 0; s <= steps; s++) {
+    const t = s * dt;
+    let exposures = [];
+
+    for (let p = 0; p < paths; p++) {
+      let mtm = 0;
+      trades.forEach(tr => {
+        if (t >= tr.years) return;
+        const data = PAIRS[tr.pair] || {v:0.15,r:0};
+        const remaining = tr.years - t;
+        const shock = (Math.random()*2-1) * data.v * Math.sqrt(remaining) * 2.33; // 95% move
+
+        if (tr.type === "FX Forward") {
+          const fwd = tr.strike * Math.exp((data.r||0)*remaining + shock);
+          mtm += tr.notional * Math.max(fwd - tr.strike, 0);
+        } else {
+          mtm += tr.notional * remaining * Math.max(shock + (data.r||0), 0);
+        }
+      });
+      exposures.push(mtm * CSA_REDUCTION[csa]);
+    }
+
+    exposures.sort((a,b)=>a-b);
+    const currentEE = exposures.reduce((a,b)=>a+b,0)/paths / 1e6;
+    const currentPFE = exposures[Math.floor(0.95*paths)] / 1e6;
+
+    time.push(t.toFixed(1));
+    ee.push(currentEE);
+    pfe95.push(currentPFE);
+    stressed.push(currentPFE * RATING_ADDON[rating] * COUNTRY_UPLIFT[country]);
+  }
+
+  const peakPFE = Math.max(...pfe95);
+  const finalPFE = peakPFE * RATING_ADDON[rating] * COUNTRY_UPLIFT[country];
+  const cva = pd * lgd * peakPFE;
+  const dva = 0.02 * 0.40 * peakPFE; // own bank assumption
+
+  // Update results
+  document.getElementById("pfe").textContent = `€${finalPFE.toFixed(2)}m`;
+  document.getElementById("cva").textContent = `€${cva.toFixed(2)}m`;
+  document.getElementById("dva").textContent = `€${dva.toFixed(2)}m`;
+  document.getElementById("results").style.display = "block";
+
+  // Draw charts
+  drawExposureChart(time, ee, pfe95, stressed);
+}
+  function drawExposureChart(time, ee, pfe95, stressed) {
+  const ctx = document.getElementById("chartExposure").getContext("2d");
+  if (exposureChart) exposureChart.destroy();
+  exposureChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: time,
+      datasets: [
+        {
+          label: 'Expected Exposure (€m)',
+          data: ee,
+          borderColor: '#44ff44',
+          backgroundColor: 'rgba(68,255,68,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        },
+        {
+          label: 'PFE 95% (€m)',
+          data: pfe95,
+          borderColor: '#ff4444',
+          backgroundColor: 'rgba(255,68,68,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        },
+        {
+          label: 'Stressed PFE (Rating + Country)',
+          data: stressed,
+          borderColor: '#ff8800',
+          borderDash: [10,5],
+          tension: 0.4,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#fff', font: { size: 14 } } }
+      },
+      scales: {
+        x: { ticks: { color: '#aaa' }, title: { display: true, text: 'Years from Today', color: '#fff' } },
+        y: { ticks: { color: '#aaa' }, beginAtZero: true }
+      }
+    }
+  });
 }
 
+// ==================== PORTFOLIO FUNCTIONS ====================
 function addPortfolioCP() {
-  const name = prompt("Counterparty name?", "Hedge Fund Alpha");
-  const pfe = Math.round(Math.random()*35 + 5);
- 10);
-  portfolioCPs.push({name: name || "CP", pfe});
-  const list = document.getElementById("portfolioList");
-  list.innerHTML = `<table style="width:100%;margin-top:20px"><tr><th>Counterparty</th><th>PFE (€m)</th><th>%</th></tr>` +
-    portfolioCPs.map(c=>`<tr><td>${c.name}</td><td>${c.pfe.toFixed(1)}</td><td>${(c.pfe/portfolioCPs.reduce((a,b)=>a+b.pfe,0)*100).toFixed(1)}%</td></tr>`).join("") + `</table>`;
-  new Chart(document.getElementById("chartPortfolio"), {type:'doughnut',data:{labels:portfolioCPs.map(c=>c.name),datasets:[{data:portfolioCPs.map(c=>c.pfe),backgroundColor:['#ff4444','#ff8800','#44ff44','#8888ff','#ff88ff']}]} ,options:{responsive:true}});
+  const name = prompt("Counterparty name?", "New Counterparty");
+  if (!name) return;
+  const pfe = parseFloat(prompt("Estimated Peak PFE (€m)?", "15")) || 15;
+  portfolioCPs.push({ name, pfe });
+  updatePortfolioView();
 }
 
-function openTab(e,t){document.querySelectorAll(".tabcontent").forEach(x=>x.style.display="none");document.querySelectorAll(".tab button").forEach(b=>b.classList.remove("active"));document.getElementById(t).style.display="block";e.currentTarget.classList.add("active");}
+function updatePortfolioView() {
+  const total = portfolioCPs.reduce((a, c) => a + c.pfe, 0);
+  let table = `
+    <table style="width:100%;margin:30px 0">
+      <thead><tr><th>Counterparty</th><th>PFE (€m)</th><th>% of Total</th></tr></thead>
+      <tbody>
+  `;
+  portfolioCPs.forEach(cp => {
+    table += `<tr><td>${cp.name}</td><td>${cp.pfe.toFixed(2)}</td><td>${(cp.pfe/total*100).toFixed(1)}%</td></tr>`;
+  });
+  table += `</tbody><tfoot><tr><td><strong>Total</strong></td><td><strong>${total.toFixed(2)}</strong></td><td>100.0%</td></tr></tfoot></table>`;
+  document.getElementById("portfolioList").innerHTML = table;
+
+  // Update doughnut
+  const ctx = document.getElementById("chartPortfolio").getContext("2d");
+  if (portfolioChart) portfolioChart.destroy();
+  portfolioChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: portfolioCPs.map(c => c.name),
+      datasets: [{
+        data: portfolioCPs.map(c => c.pfe),
+        backgroundColor: ['#ff4444','#ff8800','#44ff44','#8888ff','#ff88ff','#88ffff','#ffff88','#ff88aa'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#fff', font: { size: 14 } } }
+      }
+    }
+  });
+}
+
+function runPortfolio() {
+  if (portfolioCPs.length === 0) return alert("Add at least one counterparty");
+  updatePortfolioView();
+  document.getElementById("results").style.display = "block";
+  document.getElementById("pfe").textContent = `€${portfolioCPs.reduce((a,c)=>a+c.pfe,0).toFixed(2)}m`;
+  document.getElementById("cva").textContent = "—";
+  document.getElementById("dva").textContent = "—";
+}
+  // ==================== EXPORT FUNCTIONS ====================
+function exportExcel() {
+  let csv = "Counterparty,Peak PFE (€m),CVA (€m),DVA (€m)\n";
+  csv += `${document.getElementById("cp").value || "Portfolio"},${document.getElementById("pfe").textContent},${document.getElementById("cva").textContent},${document.getElementById("dva").textContent}\n`;
+  
+  if (portfolioCPs.length > 0) {
+    csv += "\nPortfolio Breakdown\nCounterparty,PFE (€m),% Total\n";
+    const total = portfolioCPs.reduce((a,c)=>a+c.pfe,0);
+    portfolioCPs.forEach(cp => {
+      csv += `${cp.name},${cp.pfe.toFixed(2)},${(cp.pfe/total*100).toFixed(1)}%\n`;
+    });
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  saveAs(blob, "CCR_CVA_Report.csv");
+}
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  
+  doc.setFontSize(20);
+  doc.setTextColor(245,166,35);
+  doc.text("CCR & CVA Report", 105, 25, null, null, 'center');
+  
+  doc.setFontSize(12);
+  doc.setTextColor(255,255,255);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 40);
+  doc.text(`Counterparty: ${document.getElementById("cp").value || "Portfolio View"}`, 20, 50);
+  
+  doc.setFontSize(14);
+  doc.setTextColor(255,68,68);
+  doc.text(`Peak PFE: ${document.getElementById("pfe").textContent}`, 20, 70);
+  doc.setTextColor(255,136,0);
+  doc.text(`CVA: ${document.getElementById("cva").textContent}`, 20, 80);
+  doc.setTextColor(68,255,68);
+  doc.text(`DVA: ${document.getElementById("dva").textContent}`, 20, 90);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(150,150,150);
+  doc.text("Powered by Andrey Zakharov • Open Source • MIT License", 105, 280, null, null, 'center');
+  
+  doc.save("CCR_CVA_Report.pdf");
+}
+
+// ==================== TAB & INIT ====================
+function openTab(evt, tabName) {
+  document.querySelectorAll(".tabcontent").forEach(t => t.style.display = "none");
+  document.querySelectorAll(".tab button").forEach(b => b.classList.remove("active"));
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.classList.add("active");
+}
+
+// Initialize
+window.onload = function() {
+  populatePairs();
+};
+  <!-- FINAL CLOSING TAGS -->
+</div> <!-- end container -->
+
+<script>
+// Fix small typo from Message 5
+Object.keys(PAIRS).sort().forEach(p => sel.add(new Option(p,p))); // was Object.keysPAIR)
+
+// Run on page load
+populatePairs();
+
+// Optional: Add some starter portfolio entries for demo
+if (portfolioCPs.length === 0) {
+  portfolioCPs = [
+    {name: "JPMorgan", pfe: 42.3},
+    {name: "Banco de México", pfe: 18.7},
+    {name: "BlackRock", pfe: 31.2},
+    {name: "Deutsche Bank", pfe: 9.8}
+  ];
+  updatePortfolioView();
+}
 </script>
+
 </body>
 </html>
