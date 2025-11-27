@@ -33,25 +33,24 @@ jobs:
         run: |
           mkdir -p docs/assets
 
-          # 1. Copy your custom black & orange CSS
+          # Copy your black & orange CSS
           cp assets/style.css docs/assets/style.css 2>/dev/null || true
 
-          # 2. Convert notebook → demo.html (full methodology)
-          jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic
-          mv docs/demo.html docs/demo.html
+          # Convert notebook → saves directly as docs/demo.html
+          jupyter nbconvert --to html notebooks/demo.ipynb --output-dir docs --template classic --output demo.html
 
-          # 3. Use your custom interactive calculator as landing page
-          cp docs/index.html docs/index.html 2>/dev/null || true   # your interactive HTML
+          # Use your custom interactive calculator as landing page (index.html)
+          cp docs/index.html docs/index.html 2>/dev/null || true
 
-          # 4. Inject CSS + container + footer into the interactive landing page
-          sed -i '1i<link rel="stylesheet" href="assets/style.css">' docs/index.html
-          sed -i 's|<body>|<body><div class="container">|' docs/index.html
+          # Inject theme + footer into the interactive landing page
+          sed -i '1i<link rel="stylesheet" href="assets/style.css">' docs/index.html 2>/dev/null || true
+          sed -i 's|<body>|<body><div class="container">|' docs/index.html 2>/dev/null || true
 
           echo '<hr style="border: 1px solid #f5a623; margin: 60px 0;">' >> docs/index.html
           echo '<footer>' >> docs/index.html
-          echo '  <p style="text-align:center; color:#aaa; font-size:0.95em;">' >> docs/index.html
+          echo '  <p style="text-align:center; color:#aaa; font-size:0.95em;">' >> docs.index.html
           echo '    Built by <strong>Andrey Zakharov</strong> • <a href="https://www.linkedin.com/in/zakharovaa/" target="_blank" style="color:#f5a623; text-decoration:none; font-weight:bold;">LinkedIn</a> • Open-source under MIT' >> docs/index.html
-          echo '  </p>' >> docs.index.html
+          echo '  </p>' >> docs/index.html
           echo '</footer>' >> docs/index.html
           echo '</div></body>' >> docs/index.html
 
