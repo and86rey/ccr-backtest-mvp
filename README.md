@@ -1,8 +1,8 @@
-# Counterparty Credit Risk & Backtesting MVP – **Head of CCR Complete**
+# Counterparty Credit Risk & Backtesting MVP
 
 **Live Demo** → https://and86rey.github.io/ccr-backtest-mvp
 
-**Everything a senior stakeholder wants to see in one click**  
+**Everything needed in one click**  
 - EE / PFE simulation (2,500 paths)  
 - Limits + Early Warning Indicators (color-coded)  
 - Historical backtesting (BIS coverage test)  
