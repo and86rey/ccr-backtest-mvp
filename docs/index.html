@@ -1,13 +1,12 @@
-   1: <!DOCTYPE html>
-   2: <html lang="en">
-   3: <head>
-   4: <meta charset="UTF-8">
-   5: <title>Neon CCR v1.0 – Educational & Production-Grade xVA Engine</title>
-   6: <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   7: <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-   8: <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-   9: <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-/* REPLACE lines 10–42 with this */
+   <!DOCTYPE html>
+   <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>CCR v1.0 – Educational & Experemental-Grade xVA Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
   body{background:#000;color:#fff;font-family:Arial,sans-serif;margin:0;padding:20px}
   h1{color:#f5a623;text-align:center;font-size:2.6em;margin:30px 0 10px}
@@ -32,99 +31,92 @@
     button{font-size:1em;padding:12px}
   }
 </style>     
-  43: </head>
-  44: <body>
-  45: <div class="container">
-  46:   <h1>Neon CCR</h1>
-  47:   <p class="tagline">Educational xVA Engine – Basel III/IV • Single File • Powered by Grok</p>
-  48: 
-  49:   <div class="tab">
-  50:     <button class="active" onclick="openTab(event,'single')">Single Counterparty</button>
-  51:     <button onclick="openTab(event,'portfolio')">Portfolio View (v2)</button>
-  52:   </div>
-  53: 
-  54:   <!-- SINGLE COUNTERPARTY -->
-  55:   <div id="single" class="tabcontent" style="display:block">
-  56:     <div class="box">
-  57:       <h2 style="color:var(--pri);margin-top:0">Counterparty & Regulatory Parameters</h2>
-  58:       <div class="row">
-  59:         <div><label>Counterparty Name</label><input type="text" id="cpName" value="Banco de México"></div>
-  60:         <div><label>Entity Type <span class="explain" onclick="showModal('entity')">Explain</span></label>
-  61:           <select id="entityType"><option>Sovereign</option><option>Bank</option><option>Corporate</option><option selected>Hedge Fund</option></select>
-  62:         </div>
-  63:       </div>
-  64: 
-  65:       <div class="row">
-  66:         <div><label>S&P Rating <span class="explain" onclick="showModal('rating')">Explain</span></label>
-  67:           <select id="rating"><option>AAA</option><option>AA+</option><option>AA</option><option>A+</option><option selected>A</option>
-  68:           <option>BBB+</option><option>BBB</option><option>BB+</option><option>BB</option><option>B+</option><option>B</option><option>CCC</option></select>
-  69:         </div>
-  70:         <div><label>Country Risk Tier <span class="explain" onclick="showModal('country')">Explain</span></label>
-  71:           <select id="countryTier"><option>Tier 1 (G7/OECD)</option><option selected>Tier 2 (Emerging)</option><option>Tier 3 (Frontier)</option></select>
-  72:         </div>
-  73:       </div>
-  74: 
-  75:       <div class="row">
-  76:         <div><label>1Y PD (%) <span class="explain" onclick="showModal('pd')">Explain</span></label><input type="number" id="pd" value="4.20" step="0.01"></div>
-  77:         <div><label>LGD (%) <span class="explain" onclick="showModal('lgd')">Explain</span></label><input type="number" id="lgd" value="60" step="1"></div>
-  78:       </div>
-  79: 
-  80:       <div class="row">
-  81:         <div><label>CSA Regime <span class="explain" onclick="showModal('csa')">Explain</span></label>
-  82:           <select id="csa"><option selected>Full Two-Way + SIMM IM</option><option>VM Only</option><option>No CSA</option></select>
-  83:         </div>
-  84:         <div><label>Threshold / MTA (€m) <span class="explain" onclick="showModal('mta')">Explain</span></label>
-  85:           <input type="number" id="mta" value="0.50" step="0.1">
-  86:         </div>
-  87:       </div>
-  88:     </div>
-  89: 
-  90:     <div class="box">
-  91:       <h2 style="color:var(--pri);margin-top:0">Trade Portfolio – Netting Set</h2>
-  92:       <table id="trades">
-  93:         <thead>
-  94:           <tr>
-  95:             <th>Product</th><th>Pair / Legs</th><th>Notional (€m)</th><th>Maturity (days)</th><th>Strike / Fixed Rate</th><th>Optionality</th><th></th>
-  96:           </tr>
-  97:         </thead>
-  98:         <tbody>
-  99:           <tr>
- 100:             <td><select onchange="updateProduct(this)">
- 101:               <option selected>FX Forward</option><option>FX Spot</option><option>NDF</option><option>IRS</option>
- 102:               <option>Cross-Currency Swap</option><option>European FX Option</option><option>Barrier Option</option><option>Swaption</option>
- 103:             </select></td>
- 104:             <td><select class="pair"></select></td>
- 105:             <td><input type="number" value="50" step="0.1" min="0.1"></td>
- 106:             <td><input type="number" value="1825" min="1"></td>
- 107:             <td><input type="number" value="23.10" step="0.01"></td>
- 108:             <td><select><option>None</option><option>Call</option><option>Put</option><option>Up-and-Out</option><option>Down-and-Out</option></select></td>
- 109:             <td><button onclick="this.parentElement.parentElement.remove()" style="background:#ff2a6d;border:none;padding:8px 12px;border-radius:8px;color:white">X</button></td>
- 110:           </tr>
-  111:         </tbody>
- 112:       </table>
- 113:       <div style="text-align:center;margin:30px 0">
- 114:         <button onclick="addTrade()" style="padding:12px 30px;background:#1a1a38;color:var(--pri);border:1px solid var(--pri)">+ Add Trade</button>
- 115:       </div>
- 116:     </div>
- 117: 
- 118:     <div style="text-align:center">
- 119:       <button class="main" onclick="runFullAnalysis()">RUN FULL xVA & REGULATORY ANALYSIS</button>
- 120:     </div>
- 121:   </div>
- 122: 
- 123:   <!-- PORTFOLIO VIEW -->
- 124:   <div id="portfolio" class="tabcontent">
- 125:     <div class="box">
- 126:       <h2 style="color:var(--pri)">Multi-Counterparty Portfolio Engine – v2</h2>
- 127:       <p style="text-align:center;color:#666;font-size:1.1em">Full netting sets, concentration risk, and capital aggregation across 100+ counterparties – ready for next phase.</p>
- 128:     </div>
- 129:   </div>
- 130: 
- 131:   <!-- RESULTS -->
- 132:   <div id="results" class="box" style="display:none">
- 133:     <h2 style="color:var(--pri);margin-bottom:30px">Full xVA & Regulatory Capital Results</h2>
- 134: 
- 135:     <div class="row" style="text-align:center;margin:40px 0">
+   </head>
+   <body>
+   <div class="container">
+     <h1>Neon CCR</h1>
+     <p class="tagline">Educational xVA Engine – Basel III/IV • Single File • Powered by Grok</p>
+   
+     <div class="tab">
+       <button class="active" onclick="openTab(event,'single')">Single Counterparty</button>
+       <button onclick="openTab(event,'portfolio')">Portfolio View (v2)</button>
+     </div>
+   
+   --<!-- SINGLE COUNTERPARTY -->
+     <div id="single" class="tabcontent" style="display:block">
+       <div class="box">
+         <h2 style="color:var(--pri);margin-top:0">Counterparty & Regulatory Parameters</h2>
+         <div class="row">
+           <div><label>Counterparty Name</label><input type="text" id="cpName" value="Banco de México"></div>
+           <div><label>Entity Type <span class="explain" onclick="showModal('entity')">Explain</span></label>
+             <select id="entityType"><option>Sovereign</option><option>Bank</option><option>Corporate</option><option selected>Hedge Fund</option></select>
+           </div>
+         </div> 
+         <div class="row">
+           <div><label>S&P Rating <span class="explain" onclick="showModal('rating')">Explain</span></label>
+             <select id="rating"><option>AAA</option><option>AA+</option><option>AA</option><option>A+</option><option selected>A</option>
+             <option>BBB+</option><option>BBB</option><option>BB+</option><option>BB</option><option>B+</option><option>B</option><option>CCC</option></select>
+           </div>
+           <div><label>Country Risk Tier <span class="explain" onclick="showModal('country')">Explain</span></label>
+             <select id="countryTier"><option>Tier 1 (G7/OECD)</option><option selected>Tier 2 (Emerging)</option><option>Tier 3 (Frontier)</option></select>
+           </div>
+         </div> 
+         <div class="row">
+           <div><label>1Y PD (%) <span class="explain" onclick="showModal('pd')">Explain</span></label><input type="number" id="pd" value="4.20" step="0.01"></div>
+           <div><label>LGD (%) <span class="explain" onclick="showModal('lgd')">Explain</span></label><input type="number" id="lgd" value="60" step="1"></div>
+         </div>
+   
+         <div class="row">
+           <div><label>CSA Regime <span class="explain" onclick="showModal('csa')">Explain</span></label>
+             <select id="csa"><option selected>Full Two-Way + SIMM IM</option><option>VM Only</option><option>No CSA</option></select>
+           </div>
+           <div><label>Threshold / MTA (€m) <span class="explain" onclick="showModal('mta')">Explain</span></label>
+             <input type="number" id="mta" value="0.50" step="0.1">
+           </div>
+         </div>
+       </div> 
+       <div class="box">
+         <h2 style="color:var(--pri);margin-top:0">Trade Portfolio – Netting Set</h2>
+         <table id="trades">
+           <thead>
+             <tr>
+               <th>Product</th><th>Pair / Legs</th><th>Notional (€m)</th><th>Maturity (days)</th><th>Strike / Fixed Rate</th><th>Optionality</th><th></th>
+             </tr>
+           </thead>
+           <tbody>
+             <tr>
+              <td><select onchange="updateProduct(this)">
+                <option selected>FX Forward</option><option>FX Spot</option><option>NDF</option><option>IRS</option>
+                <option>Cross-Currency Swap</option><option>European FX Option</option><option>Barrier Option</option><option>Swaption</option>
+              </select></td>
+              <td><select class="pair"></select></td>
+              <td><input type="number" value="50" step="0.1" min="0.1"></td>
+              <td><input type="number" value="1825" min="1"></td>
+              <td><input type="number" value="23.10" step="0.01"></td>
+              <td><select><option>None</option><option>Call</option><option>Put</option><option>Up-and-Out</option><option>Down-and-Out</option></select></td>
+              <td><button onclick="this.parentElement.parentElement.remove()" style="background:#ff2a6d;border:none;padding:8px 12px;border-radius:8px;color:white">X</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="text-align:center;margin:30px 0">
+          <button onclick="addTrade()" style="padding:12px 30px;background:#1a1a38;color:var(--pri);border:1px solid var(--pri)">+ Add Trade</button>
+        </div>
+      </div> 
+      <div style="text-align:center">
+        <button class="main" onclick="runFullAnalysis()">RUN FULL xVA & REGULATORY ANALYSIS</button>
+      </div>
+    </div>
+ --<!-- PORTFOLIO VIEW -->
+    <div id="portfolio" class="tabcontent">
+      <div class="box">
+        <h2 style="color:var(--pri)">Multi-Counterparty Portfolio Engine – v2</h2>
+        <p style="text-align:center;color:#666;font-size:1.1em">Full netting sets, concentration risk, and capital aggregation across 100+ counterparties – ready for next phase.</p>
+      </div>
+    </div> 
+ --<!-- RESULTS -->
+    <div id="results" class="box" style="display:none">
+      <h2 style="color:var(--pri);margin-bottom:30px">Full xVA & Regulatory Capital Results</h2> 
+      <div class="row" style="text-align:center;margin:40px 0">
  136:       <div>
  137:         <div style="font-size:3.8em;color:#00eaff;font-weight:bold" id="pfe95">€0.00m</div>
  138:         <div style="font-size:1.3em;color:#8899aa">PFE 95%</div>
